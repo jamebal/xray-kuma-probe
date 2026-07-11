@@ -1,0 +1,48 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "xray-kuma-probe"
+version = "0.1.0"
+description = "使用 Xray-core 探测代理节点并上报 Uptime Kuma"
+readme = "README.md"
+requires-python = ">=3.12"
+license = {text = "MIT"}
+dependencies = [
+  "aiohttp>=3.10,<4",
+  "httpx[socks]>=0.27,<1",
+  "pydantic>=2.8,<3",
+  "pydantic-settings>=2.4,<3",
+  "python-socketio[asyncio_client]>=5.11,<6",
+]
+
+[project.optional-dependencies]
+dev = ["mypy>=1.11", "pytest>=8.3", "pytest-asyncio>=0.24", "ruff>=0.6"]
+
+[project.scripts]
+xray-kuma-probe = "app.main:run"
+
+[tool.hatch.build.targets.wheel]
+packages = ["app"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "ASYNC", "SIM", "RUF"]
+ignore = ["RUF001", "ASYNC240"]
+
+[[tool.mypy.overrides]]
+module = ["socketio", "socketio.*"]
+ignore_missing_imports = true
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+packages = ["app"]
