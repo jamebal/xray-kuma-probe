@@ -90,6 +90,7 @@ docker compose up -d --build
 - `subscription_fetch_failed`：检查 URL、容器 DNS、证书与订阅是否返回 HTML/空内容。
 - `xray_config_invalid`：节点参数不受当前 Xray 版本支持；旧配置仍继续运行。
 - `Kuma API 调用失败`：确认地址、账号、反向代理 WebSocket 和 Kuma 版本。
+- `unable to open database file`：旧镜像在 fnOS/NAS 的 root-owned bind mount 上可能无写权限；更新镜像后 entrypoint 会自动修正 `data` 和 `generated` ownership，再以非 root 用户启动 Agent。
 - `SOCKS 端口池已耗尽`：扩大端口区间后重启；端口只在容器内绑定回环地址。
 - 健康检查显示 `xray=stopped`：检查订阅是否至少包含一个有效节点，以及 Xray 校验日志。
 

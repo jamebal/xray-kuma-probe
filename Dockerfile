@@ -15,14 +15,22 @@ RUN pip wheel --no-cache-dir --wheel-dir /wheels .
 
 FROM python:3.12-slim
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
-RUN groupadd --system probe && useradd --system --gid probe --home /app probe
+RUN apt-get update \
+    && apt-get install --no-install-recommends --yes gosu \
+    && rm -rf /var/lib/apt/lists/* \
+    && groupadd --system probe \
+    && useradd --system --gid probe --home /app probe
 COPY --from=xray /out/xray /usr/local/bin/xray
 COPY --from=builder /wheels /wheels
 RUN pip install --no-cache-dir /wheels/* && rm -rf /wheels
+COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 WORKDIR /app
-RUN mkdir -p /app/data /app/generated && chown -R probe:probe /app
-USER probe
+RUN chmod 0755 /usr/local/bin/docker-entrypoint.sh \
+    && mkdir -p /app/data /app/generated \
+    && chown -R probe:probe /app
+USER root
 EXPOSE 8080
 VOLUME ["/app/data", "/app/generated"]
 HEALTHCHECK --interval=30s --timeout=3s --start-period=30s --retries=3 CMD ["python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/health', timeout=2)"]
-ENTRYPOINT ["xray-kuma-probe"]
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
+CMD ["xray-kuma-probe"]
