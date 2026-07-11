@@ -27,7 +27,7 @@ Agent 只监听容器内 `127.0.0.1` 的 SOCKS 端口。订阅失败、空响应
 要求 Docker Engine 24+、Docker Compose v2，并已有可登录的 Uptime Kuma 2.x 实例。
 
 ```bash
-git clone <仓库地址> xray-kuma-probe
+git clone https://github.com/jamebal/xray-kuma-probe.git
 cd xray-kuma-probe
 cp .env.example .env
 $EDITOR .env
