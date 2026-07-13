@@ -35,6 +35,8 @@ docker compose up -d --build
 docker compose logs -f
 ```
 
+Compose 会创建双栈 `probe` 网络。IPv4 地址池由 Docker 自动选择，IPv6 使用项目专用的 ULA subnet，避免与 NAS 上常见的既有 IPv4 Docker network 冲突。宿主机仍需具备可用的 IPv6 出站和 Docker IPv6/NAT66 支持。
+
 至少填写 `SUBSCRIPTION_URL`、`KUMA_URL`、`KUMA_USERNAME`、`KUMA_PASSWORD`。Kuma 地址必须从 Agent 容器可访问；若 Kuma 在同一个 Compose 网络中，使用服务名，不要使用容器内的 `localhost`。
 
 ## 环境变量

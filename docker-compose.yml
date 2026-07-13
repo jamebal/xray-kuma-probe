@@ -12,3 +12,12 @@ services:
     stop_grace_period: 20s
     security_opt:
       - no-new-privileges:true
+    networks:
+      - probe
+
+networks:
+  probe:
+    enable_ipv6: true
+    ipam:
+      config:
+        - subnet: fd9e:7c1b:4f32::/64
