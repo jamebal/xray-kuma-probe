@@ -1,5 +1,6 @@
 .env
 .history/
+.worktrees/
 .venv/
 .venv312/
 __pycache__/
