@@ -3,6 +3,10 @@ from typing import Any
 from app.subscription.models import ProxyNode
 
 
+def _subscription_bool(value: str) -> bool:
+    return value.strip().lower() in {"1", "true", "yes", "on"}
+
+
 def _stream_settings(node: ProxyNode) -> dict[str, Any]:
     p = node.params
     network = p.get("type", "tcp").lower()
@@ -14,9 +18,11 @@ def _stream_settings(node: ProxyNode) -> dict[str, Any]:
     }
     if stream["security"] == "tls":
         tls: dict[str, Any] = {
-            "serverName": p.get("sni", p.get("host", "")),
+            "serverName": p.get("sni") or p.get("peer") or p.get("host", ""),
             "fingerprint": p.get("fp", "chrome"),
         }
+        if "allowInsecure" in p:
+            tls["allowInsecure"] = _subscription_bool(p["allowInsecure"])
         if p.get("alpn"):
             tls["alpn"] = [item.strip() for item in p["alpn"].split(",")]
         stream["tlsSettings"] = tls

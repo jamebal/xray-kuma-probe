@@ -15,19 +15,19 @@
 **文件：**
 - 修改：`tests/test_xray.py`
 
-- [ ] 增加 `allowInsecure` 真值、假值、缺失值测试。
-- [ ] 增加 `sni` 优先和 `peer` 回退测试。
-- [ ] 运行目标测试，确认现有实现失败。
+- [x] 增加 `allowInsecure` 真值、假值、缺失值测试。
+- [x] 增加 `sni` 优先和 `peer` 回退测试。
+- [x] 运行目标测试，确认现有实现失败。
 
 ### 任务 2：实现最小修复
 
 **文件：**
 - 修改：`app/xray/config_builder.py`
 
-- [ ] 增加订阅布尔值转换函数。
-- [ ] 仅在参数存在时写入 `tlsSettings.allowInsecure`。
-- [ ] 将 `serverName` 回退顺序调整为 `sni`、`peer`、`host`。
-- [ ] 运行目标测试，确认修复通过。
+- [x] 增加订阅布尔值转换函数。
+- [x] 仅在参数存在时写入 `tlsSettings.allowInsecure`。
+- [x] 将 `serverName` 回退顺序调整为 `sni`、`peer`、`host`。
+- [x] 运行目标测试，确认修复通过。
 
 ### 任务 3：完整验证与交付
 
@@ -35,10 +35,10 @@
 - 验证：`app/xray/config_builder.py`
 - 验证：`tests/test_xray.py`
 
-- [ ] 运行 `ruff check .`。
-- [ ] 运行 `mypy app`。
-- [ ] 运行 `pytest -q`。
-- [ ] 构建 Docker 镜像。
-- [ ] 使用真实订阅配置执行临时 HTTP 204 回归测试。
-- [ ] 检查 Git 差异，不包含敏感文件。
+- [x] 运行 `ruff check .`。
+- [x] 运行 `mypy app`。
+- [x] 运行 `pytest -q`。
+- [x] 构建 Docker 镜像。
+- [x] 使用真实订阅配置执行临时 HTTP 204 回归测试。
+- [x] 检查 Git 差异，不包含敏感文件。
 - [ ] 提交并推送 `main`。
