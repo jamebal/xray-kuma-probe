@@ -17,6 +17,7 @@ from app.probe.scheduler import ProbeScheduler
 from app.state.database import Database
 from app.state.repository import NodeRepository
 from app.subscription.fetcher import SubscriptionFetcher
+from app.subscription.filter import partition_nodes
 from app.subscription.models import ProxyNode
 from app.subscription.parser import parse_subscription
 from app.utils.hashing import stable_hash
@@ -106,9 +107,13 @@ class Application:
         if content_hash == self.subscription_hash and not force:
             logger.info("subscription_sync_success nodes=%d changed=false", len(parsed.nodes))
             return
-        records = [await self.repository.upsert_node(node) for node in parsed.nodes]
+        nodes, excluded_nodes = partition_nodes(
+            parsed.nodes, self.settings.node_exclude_keywords
+        )
+        records = [await self.repository.upsert_node(node) for node in nodes]
+        await self.repository.disable_nodes({node.node_key for node in excluded_nodes})
         await self.repository.mark_missing(
-            {node.node_key for node in parsed.nodes}, self.settings.removed_node_grace_period
+            {node.node_key for node in nodes}, self.settings.removed_node_grace_period
         )
         all_records = await self.repository.list_nodes()
         try:
@@ -133,16 +138,17 @@ class Application:
         except Exception as exc:
             logger.error("kuma_reconcile_failed error=%s", type(exc).__name__)
         config = build_config(
-            [(node, record.socks_port) for node, record in zip(parsed.nodes, records, strict=True)]
+            [(node, record.socks_port) for node, record in zip(nodes, records, strict=True)]
         )
         if not await self.xray.install_config(config):
             return
-        self.nodes = {node.node_key: node for node in parsed.nodes}
+        self.nodes = {node.node_key: node for node in nodes}
         self.subscription_hash = content_hash
         await self.xray.restart()
         logger.info(
-            "subscription_sync_success nodes=%d changed=true ignored=%s invalid=%d",
-            len(parsed.nodes),
+            "subscription_sync_success nodes=%d excluded=%d changed=true ignored=%s invalid=%d",
+            len(nodes),
+            len(excluded_nodes),
             parsed.ignored_protocols,
             parsed.invalid_count,
         )
