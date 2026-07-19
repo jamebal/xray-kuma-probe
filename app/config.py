@@ -24,6 +24,7 @@ class Settings(BaseSettings):
     failure_threshold: int = Field(2, ge=1)
     recovery_threshold: int = Field(1, ge=1)
     test_urls: Annotated[list[str], NoDecode] = ["https://cp.cloudflare.com/generate_204"]
+    node_exclude_keywords: Annotated[list[str], NoDecode] = Field(default_factory=list)
     xray_binary: Path = Path("/usr/local/bin/xray")
     xray_config: Path = Path("/app/generated/xray.json")
     socks_port_start: int = 20000
@@ -38,14 +39,21 @@ class Settings(BaseSettings):
     kuma_timeout: float = Field(10, gt=0)
     kuma_retries: int = Field(3, ge=1, le=10)
 
-    @field_validator("test_urls", mode="before")
+    @field_validator("test_urls", "node_exclude_keywords", mode="before")
     @classmethod
-    def split_urls(cls, value: object) -> object:
+    def split_comma_separated(cls, value: object) -> object:
         return (
             [part.strip() for part in value.split(",") if part.strip()]
             if isinstance(value, str)
             else value
         )
+
+    @field_validator("test_urls")
+    @classmethod
+    def require_test_urls(cls, value: list[str]) -> list[str]:
+        if not value:
+            raise ValueError("TEST_URLS 至少需要一个 URL")
+        return value
 
     @model_validator(mode="after")
     def validate_ports(self) -> "Settings":
