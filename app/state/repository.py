@@ -88,6 +88,19 @@ class NodeRepository:
                 )
         conn.commit()
 
+    async def disable_nodes(self, node_keys: set[str]) -> None:
+        if not node_keys:
+            return
+        conn, now = self.db.require(), time.time()
+        keys = sorted(node_keys)
+        placeholders = ",".join("?" for _ in keys)
+        conn.execute(
+            f"UPDATE nodes SET removed_at=?,enabled=0 "
+            f"WHERE node_key IN ({placeholders}) AND enabled=1",
+            (now, *keys),
+        )
+        conn.commit()
+
     async def set_kuma(self, node_key: str, monitor_id: int, token: str) -> None:
         conn = self.db.require()
         conn.execute(

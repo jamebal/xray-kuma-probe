@@ -7,7 +7,7 @@ from app.state.database import Database
 from app.state.repository import NodeRepository
 from app.subscription.parser import parse_subscription
 
-from .test_subscription import VLESS
+from .test_subscription import TROJAN, VLESS
 
 
 @pytest.mark.asyncio
@@ -39,6 +39,24 @@ async def test_probe_thresholds_transition_state(tmp_path: Path) -> None:
     assert await repo.record_probe(record.node_key, False, 2, 1) == "up"
     assert await repo.record_probe(record.node_key, False, 2, 1) == "down"
     assert await repo.record_probe(record.node_key, True, 2, 1) == "up"
+    await db.close()
+
+
+@pytest.mark.asyncio
+async def test_disable_nodes_is_immediate_and_does_not_disable_other_nodes(tmp_path: Path) -> None:
+    db = Database(tmp_path / "state.db")
+    await db.initialize()
+    repo = NodeRepository(db, 20000, 20010)
+    first, second = parse_subscription(f"{VLESS}\n{TROJAN}").nodes
+    await repo.upsert_node(first)
+    await repo.upsert_node(second)
+
+    await repo.disable_nodes({first.node_key})
+
+    records = {record.node_key: record for record in await repo.list_nodes()}
+    assert records[first.node_key].enabled is False
+    assert records[first.node_key].removed_at is not None
+    assert records[second.node_key].enabled is True
     await db.close()
 
 
