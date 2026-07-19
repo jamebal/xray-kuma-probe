@@ -104,12 +104,16 @@ class Application:
             return
         content_hash = stable_hash(content)
         self.last_subscription_success = datetime.now(UTC)
-        if content_hash == self.subscription_hash and not force:
-            logger.info("subscription_sync_success nodes=%d changed=false", len(parsed.nodes))
-            return
         nodes, excluded_nodes = partition_nodes(
             parsed.nodes, self.settings.node_exclude_keywords
         )
+        if content_hash == self.subscription_hash and not force:
+            logger.info(
+                "subscription_sync_success nodes=%d excluded=%d changed=false",
+                len(nodes),
+                len(excluded_nodes),
+            )
+            return
         records = [await self.repository.upsert_node(node) for node in nodes]
         await self.repository.disable_nodes({node.node_key for node in excluded_nodes})
         await self.repository.mark_missing(

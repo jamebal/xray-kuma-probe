@@ -1,8 +1,10 @@
+import logging
 from types import SimpleNamespace
 
 import pytest
 
 from app.main import Application
+from app.utils.hashing import stable_hash
 
 from .test_subscription import TROJAN, VLESS
 
@@ -113,3 +115,17 @@ async def test_sync_subscription_accepts_valid_subscription_when_all_nodes_are_f
     assert app.repository.active_keys == set()
     assert app.xray.installed_config["inbounds"] == []
     assert app.xray.installed_config["outbounds"] == []
+
+
+@pytest.mark.asyncio
+async def test_unchanged_subscription_logs_included_and_excluded_counts(
+    monkeypatch, caplog
+) -> None:
+    monkeypatch.setattr("app.main.KumaReconciler", FakeReconciler)
+    app = make_application(["la"])
+    app.subscription_hash = stable_hash(f"{VLESS}\n{TROJAN}")
+
+    with caplog.at_level(logging.INFO):
+        await app.sync_subscription()
+
+    assert "nodes=1 excluded=1 changed=false" in caplog.text
