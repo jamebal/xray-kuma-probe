@@ -31,8 +31,9 @@ class ProbeChecker:
         self.tls_verify = tls_verify
 
     async def check(self, socks_port: int, urls: list[str]) -> ProbeResult:
-        started = time.perf_counter()
         try:
+            latencies: list[float] = []
+            last_status: int | None = None
             async with httpx.AsyncClient(
                 proxy=f"socks5://127.0.0.1:{socks_port}",
                 timeout=self.timeout,
@@ -40,27 +41,31 @@ class ProbeChecker:
                 follow_redirects=True,
             ) as client:
                 for url in urls:
+                    started = time.perf_counter()
                     response = await client.get(url)
+                    elapsed_ms = (time.perf_counter() - started) * 1000
+                    last_status = response.status_code
                     expected = (
                         response.status_code == 204
                         if "generate_204" in url
                         else 200 <= response.status_code < 400
                     )
-                    if expected:
+                    if not expected:
                         return ProbeResult(
-                            True,
-                            round((time.perf_counter() - started) * 1000),
-                            response.status_code,
+                            False,
                             None,
+                            response.status_code,
+                            "HTTP_ERROR",
                             datetime.now(UTC),
                         )
-                return ProbeResult(
-                    False,
-                    round((time.perf_counter() - started) * 1000),
-                    response.status_code,
-                    "HTTP_ERROR",
-                    datetime.now(UTC),
-                )
+                    latencies.append(elapsed_ms)
+            return ProbeResult(
+                True,
+                round(sum(latencies) / len(latencies)),
+                last_status,
+                None,
+                datetime.now(UTC),
+            )
         except asyncio.CancelledError:
             raise
         except Exception as exc:
