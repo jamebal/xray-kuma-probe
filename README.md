@@ -79,7 +79,8 @@ docker compose up -d
 | `PROBE_TIMEOUT` / `PROBE_CONNECT_TIMEOUT` | `10` / `5` | 总超时与连接超时 |
 | `PROBE_CONCURRENCY` | `10` | 最大并发探测数 |
 | `FAILURE_THRESHOLD` / `RECOVERY_THRESHOLD` | `2` / `1` | DOWN/UP 防抖阈值 |
-| `TEST_URLS` | Cloudflare 204 | 逗号分隔；`generate_204` 要求 204，其他 URL 接受 200-399 |
+| `TEST_URLS` | Cloudflare 204 | 逗号分隔；全部成功才成功，延迟取各 URL 平均值；`generate_204` 要求 204，其他 URL 接受 200-399 |
+| `NODE_EXCLUDE_KEYWORDS` | 空 | 逗号分隔；按节点名称忽略大小写包含匹配，命中后立即排除 |
 | `SOCKS_PORT_START` / `SOCKS_PORT_END` | `20000` / `29999` | 容器内稳定端口池 |
 | `REMOVED_NODE_POLICY` | `pause` | 可选 `pause` 或 `delete` |
 | `REMOVED_NODE_GRACE_PERIOD` | `86400` | 消失节点宽限期，秒 |
@@ -88,6 +89,10 @@ docker compose up -d
 | `HEALTH_LISTEN` / `HEALTH_PORT` | `0.0.0.0` / `8080` | 健康检查监听 |
 
 完整项目参数均列在 `.env.example`。
+
+修改 `NODE_EXCLUDE_KEYWORDS` 后需要重启 Agent。既有 Monitor 一旦命中关键字，
+会立即按 `REMOVED_NODE_POLICY` 暂停或删除，不等待
+`REMOVED_NODE_GRACE_PERIOD`；新命中节点不会占用 SOCKS 端口或加入监控。
 
 ## Uptime Kuma 与 Status Page
 

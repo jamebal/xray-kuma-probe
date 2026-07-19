@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import pytest
 from pydantic import ValidationError
 
@@ -64,3 +66,13 @@ def test_kuma_monitor_group_is_configurable(monkeypatch) -> None:
     monkeypatch.setenv("KUMA_MONITOR_GROUP", "Mossnet Nodes")
 
     assert Settings(_env_file=None).kuma_monitor_group == "Mossnet Nodes"
+
+
+def test_env_example_documents_node_filter_and_multiple_test_urls() -> None:
+    example = Path(".env.example").read_text()
+
+    assert "NODE_EXCLUDE_KEYWORDS=" in example
+    test_urls_line = next(
+        line for line in example.splitlines() if line.startswith("TEST_URLS=")
+    )
+    assert "," in test_urls_line
